@@ -112,3 +112,47 @@ class GeoProjectItem(BaseModel):
     longitude: float
     geo_precision: str
 
+# ----------------- Phase 5: Auth & Audit Schemas -----------------
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UserProfile(BaseModel):
+    username: str
+    name: str
+    role: str
+    department: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserProfile
+
+class InterventionCreate(BaseModel):
+    project_code: str
+    intervention_type: str = Field(..., description="Action category, e.g., 'SLAO Deployment', 'Collector Review'")
+    notes: str = Field(..., min_length=5, description="Administrative justification and operational details")
+
+class InterventionResponse(BaseModel):
+    id: int
+    project_code: str
+    username: str
+    role: str
+    intervention_type: str
+    notes: str
+    timestamp: str
+
+class AuditLogItem(BaseModel):
+    id: int
+    timestamp: str
+    username: str
+    role: str
+    action: str
+    project_code: Optional[str] = None
+    details: str
+
+class AuditLogListResponse(BaseModel):
+    total: int
+    items: List[AuditLogItem]
+

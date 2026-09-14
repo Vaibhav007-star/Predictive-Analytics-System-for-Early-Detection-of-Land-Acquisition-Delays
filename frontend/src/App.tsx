@@ -6,8 +6,9 @@ import { PriorityQueueTable } from './components/PriorityQueueTable';
 import { ProjectsTable } from './components/ProjectsTable';
 import { GISMap } from './components/GISMap';
 import { ProjectDetailModal } from './components/ProjectDetailModal';
-import type { RisksSummaryResponse } from './types';
-import { fetchRisksSummary } from './api';
+import { AuditLogModal } from './components/AuditLogModal';
+import type { RisksSummaryResponse, User } from './types';
+import { fetchRisksSummary, getStoredUser, loginUser, getAuthToken } from './api';
 import { RefreshCw, ShieldCheck } from 'lucide-react';
 
 export function App() {
@@ -16,8 +17,38 @@ export function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Authentication & RBAC state (Defaults to MoRD Admin for frictionless hackathon demonstration)
+  const [user, setUser] = useState<User | null>(() => getStoredUser());
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
+
   // Selected project for modal detail inspection
   const [selectedProjectCode, setSelectedProjectCode] = useState<string | null>(null);
+
+  const initAuth = async () => {
+    // If no token or user, automatically establish demo admin session
+    if (!getAuthToken() || !user) {
+      try {
+        const authData = await loginUser('admin', 'sih26017');
+        setUser(authData.user);
+      } catch (e) {
+        console.warn('Auto-login fallback:', e);
+      }
+    }
+  };
+
+  const handleSwitchRole = async (targetRole: 'Admin' | 'Viewer') => {
+    try {
+      if (targetRole === 'Admin') {
+        const authData = await loginUser('admin', 'sih26017');
+        setUser(authData.user);
+      } else {
+        const authData = await loginUser('viewer', 'viewer123');
+        setUser(authData.user);
+      }
+    } catch (err: any) {
+      alert(`Role switch error: ${err.message}`);
+    }
+  };
 
   const loadSummary = async () => {
     try {
@@ -33,13 +64,21 @@ export function App() {
   };
 
   useEffect(() => {
+    initAuth();
     loadSummary();
   }, []);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
       {/* Top Header & Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        user={user}
+        onSwitchRole={handleSwitchRole}
+        onOpenAuditLogs={() => setIsAuditModalOpen(true)}
+      />
+
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -102,7 +141,16 @@ export function App() {
       <ProjectDetailModal
         projectCode={selectedProjectCode}
         onClose={() => setSelectedProjectCode(null)}
+        user={user}
       />
+
+      {/* Administrative Compliance Audit Trail Modal */}
+      <AuditLogModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        isAdmin={user?.role === 'Admin'}
+      />
+
 
       {/* Official Government System Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">

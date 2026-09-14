@@ -5,6 +5,7 @@ Connects SQLite database, Gradient Boosting inference, SHAP XAI engine, and Risk
 
 import os
 import sqlite3
+from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, Optional, Tuple
@@ -43,6 +44,7 @@ class ProjectService:
     """
     def __init__(self):
         self.db_path = DB_PATH
+        self._init_audit_tables()
         self.df = load_projects_from_db(self.db_path)
         
         # Fit feature pipeline strictly on train split
@@ -64,6 +66,7 @@ class ProjectService:
 
         # Precompute inferences for all 1,477 projects
         self._precompute_all_risks()
+
 
     def _precompute_all_risks(self):
         """Precomputes predicted probabilities, risk scores, and bands for instant retrieval."""
@@ -337,7 +340,177 @@ class ProjectService:
             })
         return items
 
+    # ----------------- Phase 5: Audit & Intervention Storage -----------------
+
+    def _init_audit_tables(self):
+        """Initializes audit_logs and interventions tables in SQLite database if not present."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS audit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    username TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    project_code TEXT,
+                    details TEXT NOT NULL
+                )
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS interventions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    project_code TEXT NOT NULL,
+                    username TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    intervention_type TEXT NOT NULL,
+                    notes TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+
+    def record_audit_log(
+        self,
+        username: str,
+        role: str,
+        action: str,
+        project_code: Optional[str] = None,
+        details: str = ""
+    ) -> Dict[str, Any]:
+        """Appends a new immutable audit record to the audit_logs table."""
+        now = datetime.now(timezone.utc).isoformat()
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                '''
+                INSERT INTO audit_logs (timestamp, username, role, action, project_code, details)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ''',
+                (now, username, role, action, project_code, details)
+            )
+            entry_id = cursor.lastrowid
+            conn.commit()
+
+        return {
+            'id': entry_id,
+            'timestamp': now,
+            'username': username,
+            'role': role,
+            'action': action,
+            'project_code': project_code,
+            'details': details
+        }
+
+    def get_audit_logs(
+        self,
+        limit: int = 50,
+        project_code: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Retrieves chronological audit log entries, optionally filtered by project_code."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            if project_code:
+                cursor.execute(
+                    '''
+                    SELECT id, timestamp, username, role, action, project_code, details
+                    FROM audit_logs
+                    WHERE project_code = ?
+                    ORDER BY id DESC
+                    LIMIT ?
+                    ''',
+                    (project_code, limit)
+                )
+            else:
+                cursor.execute(
+                    '''
+                    SELECT id, timestamp, username, role, action, project_code, details
+                    FROM audit_logs
+                    ORDER BY id DESC
+                    LIMIT ?
+                    ''',
+                    (limit,)
+                )
+            rows = cursor.fetchall()
+
+        return [dict(r) for r in rows]
+
+    def record_intervention(
+        self,
+        project_code: str,
+        username: str,
+        role: str,
+        intervention_type: str,
+        notes: str
+    ) -> Dict[str, Any]:
+        """Records an official administrative intervention and logs it in the audit trail."""
+        # Verify project exists
+        project = self.get_project_by_id(project_code)
+        if not project:
+            raise ValueError(f"Project '{project_code}' not found in authentic repository.")
+
+        now = datetime.now(timezone.utc).isoformat()
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                '''
+                INSERT INTO interventions (timestamp, project_code, username, role, intervention_type, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ''',
+                (now, project_code, username, role, intervention_type, notes)
+            )
+            intervention_id = cursor.lastrowid
+            conn.commit()
+
+        # Simultaneously record audit trail entry
+        self.record_audit_log(
+            username=username,
+            role=role,
+            action="INTERVENTION_CREATED",
+            project_code=project_code,
+            details=f"Recorded '{intervention_type}' intervention: {notes}"
+        )
+
+        return {
+            'id': intervention_id,
+            'project_code': project_code,
+            'username': username,
+            'role': role,
+            'intervention_type': intervention_type,
+            'notes': notes,
+            'timestamp': now
+        }
+
+    def get_interventions(self, project_code: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Retrieves administrative interventions for a specific project or all projects."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            if project_code:
+                cursor.execute(
+                    '''
+                    SELECT id, timestamp, project_code, username, role, intervention_type, notes
+                    FROM interventions
+                    WHERE project_code = ?
+                    ORDER BY id DESC
+                    ''',
+                    (project_code,)
+                )
+            else:
+                cursor.execute(
+                    '''
+                    SELECT id, timestamp, project_code, username, role, intervention_type, notes
+                    FROM interventions
+                    ORDER BY id DESC
+                    '''
+                )
+            rows = cursor.fetchall()
+
+        return [dict(r) for r in rows]
+
 # Global singleton
+
 _SERVICE_INSTANCE: Optional[ProjectService] = None
 
 def get_service() -> ProjectService:

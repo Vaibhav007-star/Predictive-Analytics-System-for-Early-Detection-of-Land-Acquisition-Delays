@@ -93,3 +93,42 @@ export interface GeoProjectItem {
   longitude: number;
   geo_precision: string;
 }
+
+export interface User {
+  username: string;
+  name: string;
+  role: 'Admin' | 'Viewer';
+  department: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface Intervention {
+  id: number;
+  project_code: string;
+  username: string;
+  role: string;
+  intervention_type: string;
+  notes: string;
+  timestamp: string;
+}
+
+export interface AuditLogItem {
+  id: number;
+  timestamp: string;
+  username: string;
+  role: string;
+  action: string;
+  project_code?: string | null;
+  details: string;
+}
+
+export interface AuditLogListResponse {
+  total: number;
+  items: AuditLogItem[];
+}
+

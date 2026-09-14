@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import type { ProjectDetail, ExplanationResponse } from '../types';
-import { fetchProjectDetail, fetchProjectExplanation } from '../api';
-import { X, Sparkles, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import type { ProjectDetail, ExplanationResponse, User, Intervention } from '../types';
+import { fetchProjectDetail, fetchProjectExplanation, fetchProjectInterventions, createIntervention } from '../api';
+import { X, Sparkles, AlertTriangle, ShieldCheck, Info, CheckCircle2, Send, Clock, User as UserIcon } from 'lucide-react';
 
 interface ProjectDetailModalProps {
   projectCode: string | null;
   onClose: () => void;
+  user: User | null;
 }
 
 export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   projectCode,
-  onClose
+  onClose,
+  user
 }) => {
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [explanation, setExplanation] = useState<ExplanationResponse | null>(null);
+  const [interventions, setInterventions] = useState<Intervention[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Intervention form state
+  const [intType, setIntType] = useState<string>('SLAO Field Deployment & Joint Verification');
+  const [intNotes, setIntNotes] = useState<string>('');
+  const [submittingInt, setSubmittingInt] = useState<boolean>(false);
+  const [intSuccess, setIntSuccess] = useState<string | null>(null);
+  const [intError, setIntError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectCode) return;
@@ -24,12 +34,16 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       try {
         setLoading(true);
         setError(null);
-        const [detRes, expRes] = await Promise.all([
+        setIntSuccess(null);
+        setIntError(null);
+        const [detRes, expRes, intRes] = await Promise.all([
           fetchProjectDetail(projectCode),
-          fetchProjectExplanation(projectCode)
+          fetchProjectExplanation(projectCode),
+          fetchProjectInterventions(projectCode).catch(() => [] as Intervention[])
         ]);
         setDetail(detRes);
         setExplanation(expRes);
+        setInterventions(intRes);
       } catch (err: any) {
         setError(err.message || 'Failed to load project details');
       } finally {
@@ -40,7 +54,27 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     loadData();
   }, [projectCode]);
 
+  const handleRecordIntervention = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projectCode || !intNotes.trim()) return;
+    setSubmittingInt(true);
+    setIntError(null);
+    setIntSuccess(null);
+    try {
+      const created = await createIntervention(projectCode, intType, intNotes.trim());
+      setInterventions([created, ...interventions]);
+      setIntNotes('');
+      setIntSuccess('Intervention logged successfully in MoRD compliance audit trail.');
+      setTimeout(() => setIntSuccess(null), 5000);
+    } catch (err: any) {
+      setIntError(err.message || 'Failed to record intervention');
+    } finally {
+      setSubmittingInt(false);
+    }
+  };
+
   if (!projectCode) return null;
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
@@ -215,10 +249,140 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                     <span>{explanation.disclaimer}</span>
                   </div>
+
+                  {/* Administrative Interventions & Executive Actions */}
+                  <div className="pt-4 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                          <span>Administrative Interventions & Executive Actions</span>
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">
+                            {interventions.length} Recorded
+                          </span>
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          Track official SLAO deployments, joint surveys, and Section 19 R&R authorizations
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Recorded Interventions List */}
+                    {interventions.length > 0 ? (
+                      <div className="space-y-2.5 mb-4">
+                        {interventions.map((item) => (
+                          <div
+                            key={item.id}
+                            className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-1">
+                              <span className="font-semibold text-slate-900 bg-amber-100/80 text-amber-900 border border-amber-300/60 px-2 py-0.5 rounded text-[11px]">
+                                {item.intervention_type}
+                              </span>
+                              <div className="flex items-center space-x-3 text-[11px] text-slate-500">
+                                <span className="flex items-center space-x-1">
+                                  <UserIcon className="w-3 h-3 text-slate-400" />
+                                  <span className="font-medium text-slate-700">{item.username}</span>
+                                  <span>({item.role})</span>
+                                </span>
+                                <span className="flex items-center space-x-1 font-mono">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  <span>{new Date(item.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-slate-700 pt-1 leading-relaxed">
+                              {item.notes}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-3.5 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-500 mb-4">
+                        No official interventions recorded yet for this project.
+                      </div>
+                    )}
+
+                    {/* Record New Intervention Panel */}
+                    {user?.role === 'Admin' ? (
+                      <form onSubmit={handleRecordIntervention} className="p-4 bg-amber-50/50 border border-amber-200 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-950 uppercase tracking-wider flex items-center space-x-1.5">
+                            <Send className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Record Administrative Intervention (Admin)</span>
+                          </span>
+                          <span className="text-[10px] text-amber-800 font-medium">Logged to Audit Trail</span>
+                        </div>
+
+                        {intSuccess && (
+                          <div className="p-2.5 bg-emerald-100/90 border border-emerald-300 text-emerald-800 rounded-md text-xs flex items-center space-x-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>{intSuccess}</span>
+                          </div>
+                        )}
+
+                        {intError && (
+                          <div className="p-2.5 bg-rose-100/90 border border-rose-300 text-rose-800 rounded-md text-xs flex items-center space-x-2">
+                            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>{intError}</span>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <label className="block font-semibold text-slate-700 mb-1">
+                              Action Category
+                            </label>
+                            <select
+                              value={intType}
+                              onChange={(e) => setIntType(e.target.value)}
+                              className="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            >
+                              <option value="SLAO Field Deployment & Joint Verification">SLAO Field Deployment & Joint Verification</option>
+                              <option value="Section 19 R&R Entitlement Package Approval">Section 19 R&R Entitlement Package Approval</option>
+                              <option value="Direct Encumbrance-Free RoW Handover Protocol">Direct Encumbrance-Free RoW Handover Protocol</option>
+                              <option value="District Collector Central Sector Review (CSPCC)">District Collector Central Sector Review (CSPCC)</option>
+                              <option value="Inter-Departmental Utility Relocation Order">Inter-Departmental Utility Relocation Order</option>
+                              <option value="Special Land Tribunal Dispute Fast-Tracking">Special Land Tribunal Dispute Fast-Tracking</option>
+                            </select>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block font-semibold text-slate-700 mb-1">
+                              Operational Directive & Minutes
+                            </label>
+                            <textarea
+                              value={intNotes}
+                              onChange={(e) => setIntNotes(e.target.value)}
+                              rows={2}
+                              placeholder="e.g., Instructed District Collector and NHAI Regional Officer to finalize pending award disbursement for 18.4 km stretch by 30th of month."
+                              className="w-full bg-white border border-slate-300 rounded-md px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                          <button
+                            type="submit"
+                            disabled={submittingInt || !intNotes.trim()}
+                            className="flex items-center space-x-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>{submittingInt ? 'Recording...' : 'Submit Official Intervention'}</span>
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="p-3 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-center justify-between">
+                        <span>Viewing mode (Auditor clearance). Intervention logging requires MoRD Administrative credentials.</span>
+                        <span className="font-semibold text-[11px] text-slate-500">Read-Only</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </>
           ) : null}
+
         </div>
       </div>
     </div>
