@@ -19,3 +19,4 @@ if __name__ == "__main__":
     print(f"  - Rural Infrastructure Records (PMGSY): {result['pmgsy_count']:,} records")
     print(f"  - Urban Infrastructure Projects (SCM): {result['scm_count']:,} projects")
     print(f"  - SQLite Database: {result['db_path']}")
+

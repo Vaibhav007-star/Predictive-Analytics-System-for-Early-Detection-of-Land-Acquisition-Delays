@@ -125,3 +125,4 @@ def init_db(db_path: Optional[str] = None) -> None:
 if __name__ == "__main__":
     init_db()
     print("Database schema initialized successfully at:", DEFAULT_DB_PATH)
+

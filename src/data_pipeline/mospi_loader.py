@@ -195,3 +195,4 @@ if __name__ == "__main__":
     df = extract_mospi_projects(pdf_file)
     print(f"Extracted {len(df)} authentic projects.")
     print("Sample row:\n", df.iloc[0])
+

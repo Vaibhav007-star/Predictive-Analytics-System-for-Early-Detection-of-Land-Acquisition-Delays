@@ -83,3 +83,4 @@ if __name__ == "__main__":
     print(f"Loaded {len(df)} SCM project records.")
     print("Sample with land acquisition mention:", (df['has_land_acquisition_mention'] == 1).sum())
     print("Sample with clearance/court mention:", (df['has_clearance_mention'] == 1).sum())
+

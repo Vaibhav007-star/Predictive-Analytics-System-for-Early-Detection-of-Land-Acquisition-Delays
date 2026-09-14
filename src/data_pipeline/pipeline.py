@@ -107,3 +107,4 @@ def run_full_pipeline(db_path: str = DEFAULT_DB_PATH) -> Dict[str, Any]:
         "scm_count": len(scm_df),
         "db_path": db_path
     }
+

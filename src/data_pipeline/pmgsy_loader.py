@@ -78,3 +78,4 @@ if __name__ == "__main__":
     df = load_pmgsy_data(excel_file)
     print(f"Loaded {len(df)} PMGSY district progress records.")
     print("Sample:\n", df[['state_name', 'district_name', 'pmgsy_scheme', 'length_road_sanctioned_km', 'length_road_completed_km', 'length_completion_rate_pct']].head(3))
+

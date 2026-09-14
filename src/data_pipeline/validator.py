@@ -77,3 +77,4 @@ def format_quality_report_md(report: Dict[str, Any]) -> str:
             lines.append(f"| `{dcol}` | {dstats['total_populated']:,} | {dstats['invalid_dates_count']} | {dstats['invalid_dates_pct']}% | {dstats['min_date']} | {dstats['max_date']} |")
     lines.append("\n")
     return "\n".join(lines)
+

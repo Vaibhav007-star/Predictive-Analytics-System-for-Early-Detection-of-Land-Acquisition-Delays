@@ -83,3 +83,4 @@ C:\Projects\Hackthon\
 
 - No hardcoded API keys or external secrets are required for Phase 1 because all ingested datasets are open public records published under the **Government Open Data License - India (GODL)**.
 - Local SQLite database resides at `data/land_delays.db` and is self-contained.
+
