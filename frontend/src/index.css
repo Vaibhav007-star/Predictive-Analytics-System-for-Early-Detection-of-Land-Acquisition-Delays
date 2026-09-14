@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* Custom tweaks for Leaflet tooltips & clean styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}

@@ -102,3 +102,4 @@ class GradientBoostingDelayModel:
         instance.feature_names = data['feature_names']
         instance.is_trained = True
         return instance
+

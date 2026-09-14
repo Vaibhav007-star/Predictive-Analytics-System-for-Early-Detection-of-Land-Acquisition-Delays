@@ -141,3 +141,4 @@ class ProjectExplainabilityEngine:
             'top_mitigating_factors': top_mitigating_factors,
             'disclaimer': "DECISION SUPPORT ONLY: Predictions and SHAP contributions indicate statistical association, not legal causation. Human administrative review required."
         }
+

@@ -6,6 +6,9 @@ __pycache__/
 # Large Raw binaries
 data/raw/*.pdf
 
+# Node & Frontend
+frontend/node_modules/
+
 # Environments
 venv/
 .env
