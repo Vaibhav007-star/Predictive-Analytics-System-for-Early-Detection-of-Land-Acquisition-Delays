@@ -74,3 +74,4 @@ def test_baseline_model_training_and_eval():
     metrics = compute_honest_metrics(y_test, test_probs)
     assert metrics['roc_auc'] > 0.70, "Baseline ROC-AUC should be substantially above random chance (0.50)"
     assert metrics['f1_score'] > 0.65, "Baseline F1 should exceed trivial baseline"
+
