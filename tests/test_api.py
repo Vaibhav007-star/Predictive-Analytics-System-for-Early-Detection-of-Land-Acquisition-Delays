@@ -2,11 +2,20 @@
 Unit and Integration Tests for SIH26017 FastAPI Backend.
 """
 
+import os
+import sys
+
+# Ensure repository root is in python path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 import pytest
 from fastapi.testclient import TestClient
 from src.api.app import app
 
 client = TestClient(app)
+
 
 def test_api_root():
     response = client.get("/")
@@ -83,4 +92,8 @@ def test_project_detail_and_risk_and_explanation():
 def test_missing_project_error():
     response = client.get("/projects/NONEXISTENT_CODE_9999")
     assert response.status_code == 404
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-v"]))
+
 

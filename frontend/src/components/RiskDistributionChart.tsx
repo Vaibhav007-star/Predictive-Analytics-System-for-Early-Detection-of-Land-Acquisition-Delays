@@ -128,3 +128,4 @@ export const RiskDistributionChart: React.FC<RiskDistributionChartProps> = ({ su
     </div>
   );
 };
+

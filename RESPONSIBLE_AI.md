@@ -57,3 +57,4 @@ To prevent misuse or unauthorized alterations:
 - **Role-Based Clearance:** Strict separation between `Admin` (MoRD Officers authorized to log interventions) and `Viewer` (auditors and public observers with read-only access).
 - **Tamper-Evident Audit Logging:** Key administrative events — including user authentication, intervention orders, and parameter adjustments — are permanently recorded in the `audit_logs` SQLite table with ISO timestamps, user identities, and action summaries.
 - **Dual Verification:** Interventions logged on a project code are visible to all authorized stakeholders, creating institutional memory and multi-agency transparency.
+

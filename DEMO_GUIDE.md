@@ -144,3 +144,4 @@
 
 ### Q3: "Can this model be used to automatically penalize contractors?"
 > **Answer:** *"No. Under our Responsible AI framework (documented in `RESPONSIBLE_AI.md`), this system is designed strictly for human-in-the-loop decision support. SHAP feature attributions represent statistical risk associations, not legal proof of fault. It serves to alert District Collectors and Project Directors to deploy proactive mitigation before timeline slips occur."*
+

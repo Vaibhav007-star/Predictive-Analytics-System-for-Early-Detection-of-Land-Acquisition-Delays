@@ -2,11 +2,20 @@
 Phase 5 Tests: Authentication, Role-Based Access Control, Interventions & Audit Trail.
 """
 
+import os
+import sys
+
+# Ensure repository root is in python path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 import pytest
 from fastapi.testclient import TestClient
 from src.api.app import app
 
 client = TestClient(app)
+
 
 def test_login_success_admin():
     res = client.post("/api/auth/login", json={"username": "admin", "password": "sih26017"})
@@ -102,3 +111,8 @@ def test_intervention_creation_and_audit_trail():
     assert audit_data["total"] > 0
     actions = [item["action"] for item in audit_data["items"]]
     assert "INTERVENTION_CREATED" in actions
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-v"]))
+
+

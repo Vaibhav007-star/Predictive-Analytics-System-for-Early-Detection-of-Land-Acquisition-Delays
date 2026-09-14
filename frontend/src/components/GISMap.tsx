@@ -184,3 +184,4 @@ export const GISMap: React.FC<GISMapProps> = ({ onSelectProject }) => {
     </div>
   );
 };
+

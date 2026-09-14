@@ -179,3 +179,4 @@ py -3.12 -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
 1. **Non-Causal Explanation Policy:** Machine learning attribution identifies statistical contribution to delay risk; explanations strictly state *“contributed to elevating delay risk”* rather than asserting direct legal causality.
 2. **Human-in-the-Loop Decision Support:** The system advises and highlights critical priorities; it never autonomously cancels projects, penalizes contractors, or executes statutory land acquisition orders.
 3. **Spatial Precision Transparency:** Because public MoSPI records list project locations at the State/UT level, map markers plot at authenticated state administrative centroids and are explicitly labeled `State-level centroid`.
+

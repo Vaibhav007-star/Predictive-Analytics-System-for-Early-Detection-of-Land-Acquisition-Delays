@@ -168,3 +168,4 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({ isOpen, onClose, i
     </div>
   );
 };
+

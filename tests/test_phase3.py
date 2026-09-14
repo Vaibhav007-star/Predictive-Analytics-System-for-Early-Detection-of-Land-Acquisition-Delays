@@ -2,16 +2,24 @@
 Automated unit tests for SIH26017 Phase 3: Ensemble, SHAP Explainability & Risk Engine.
 """
 
+import os
+import sys
+
+# Ensure repository root is in python path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 import pytest
 import numpy as np
 import pandas as pd
-import os
 
 from src.modeling.split import load_projects_from_db, create_project_splits
 from src.modeling.features import FeaturePipeline
 from src.modeling.ensemble import GradientBoostingDelayModel
 from src.modeling.explainability import ProjectExplainabilityEngine
 from src.modeling.risk_engine import RiskEngine, DEFAULT_THRESHOLDS
+
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "land_delays.db")
 
@@ -91,3 +99,7 @@ def test_risk_engine():
     assert prof['risk_score'] == 85
     assert prof['risk_category'] == 'CRITICAL'
     assert 'recommended_action' in prof
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-v"]))
+

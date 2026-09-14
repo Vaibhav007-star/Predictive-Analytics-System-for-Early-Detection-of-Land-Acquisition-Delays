@@ -101,3 +101,4 @@ export const PriorityQueueTable: React.FC<PriorityQueueTableProps> = ({
     </div>
   );
 };
+

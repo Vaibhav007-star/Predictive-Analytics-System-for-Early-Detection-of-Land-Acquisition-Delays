@@ -3,8 +3,11 @@ FastAPI Application for SIH26017.
 Predictive Analytics System for Early Detection of Land Acquisition Delays.
 """
 
-from fastapi import FastAPI, HTTPException, Query, Depends, status
+import os
+from fastapi import FastAPI, HTTPException, Query, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import Optional, List
 
 from src.api.schemas import (
@@ -31,12 +34,14 @@ from src.api.auth import (
 )
 from src.api.service import get_service
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
+
 app = FastAPI(
     title="SIH26017: Land Acquisition Delay Predictive Analytics API",
     description="Ministry of Rural Development — Predictive Analytics System for Early Detection of Land Acquisition Delays.",
     version="1.0.0"
 )
-
 
 # Enable CORS for Vite frontend
 app.add_middleware(
@@ -48,14 +53,19 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
+def read_root(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and os.path.exists(FRONTEND_DIST):
+        return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
     return {
         "system": "SIH26017: Land Acquisition Delay Early Detection System",
         "authority": "Ministry of Rural Development, Government of India",
         "status": "Operational",
         "version": "1.0.0",
+        "app_url": "/app",
         "docs_url": "/docs"
     }
+
 
 # 1. Projects Catalog (Both /projects and /api/projects)
 @app.get("/projects", response_model=ProjectListResponse)
@@ -230,14 +240,18 @@ def get_audit_trail(
 
 
 # Mount built React frontend if available
-import os
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-
-FRONTEND_DIST = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend", "dist")
 if os.path.exists(FRONTEND_DIST):
     # Serve assets
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
+
+    # Serve static favicon / icons
+    @app.get("/favicon.svg")
+    def serve_favicon():
+        return FileResponse(os.path.join(FRONTEND_DIST, "favicon.svg"))
+
+    @app.get("/icons.svg")
+    def serve_icons():
+        return FileResponse(os.path.join(FRONTEND_DIST, "icons.svg"))
 
     # Serve index.html for root and SPA routes
     @app.get("/app")
@@ -248,4 +262,5 @@ if os.path.exists(FRONTEND_DIST):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("src.api.app:app", host="0.0.0.0", port=8000, reload=True)
+
 

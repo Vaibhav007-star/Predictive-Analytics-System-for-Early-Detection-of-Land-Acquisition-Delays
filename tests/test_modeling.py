@@ -4,15 +4,23 @@ Run with:
     py -3.12 -m pytest tests/
 """
 
+import os
+import sys
+
+# Ensure repository root is in python path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 import pytest
 import numpy as np
 import pandas as pd
-import os
 
 from src.modeling.split import load_projects_from_db, create_project_splits
 from src.modeling.features import FeaturePipeline, check_data_leakage, FORBIDDEN_LEAKAGE_COLUMNS
 from src.modeling.baseline import BaselineDelayModel
 from src.modeling.evaluate import compute_honest_metrics
+
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "land_delays.db")
 
@@ -74,4 +82,8 @@ def test_baseline_model_training_and_eval():
     metrics = compute_honest_metrics(y_test, test_probs)
     assert metrics['roc_auc'] > 0.70, "Baseline ROC-AUC should be substantially above random chance (0.50)"
     assert metrics['f1_score'] > 0.65, "Baseline F1 should exceed trivial baseline"
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-v"]))
+
 

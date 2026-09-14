@@ -142,3 +142,4 @@ To prevent retrospective bias, the pipeline strictly permits features knowable *
 - **Geospatial GIS Map:** Leaflet OpenStreetMap interactive visualization with authentic state administrative centroids and explicit precision labeling (`State-level centroid`).
 - **Interactive Project Modal:** Deep-dive into project financials, timeline trajectories, local SHAP drivers, and real-time intervention recording form.
 - **Audit Trail Modal:** Real-time inspection of administrative actions and compliance history.
+

@@ -156,3 +156,4 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Access restricted: Requires MoRD Administrative clearance (Admin role)."
         )
     return current_user
+

@@ -243,3 +243,4 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({ onSelectProject })
     </div>
   );
 };
+
