@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Raw binaries
+data/raw/*.pdf
+
+# Environments
+venv/
+.env
+
+# OS files
+Thumbs.db
+.DS_Store
