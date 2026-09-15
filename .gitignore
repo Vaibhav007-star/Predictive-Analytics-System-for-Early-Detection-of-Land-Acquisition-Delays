@@ -13,7 +13,9 @@ frontend/node_modules/
 
 # Environments
 venv/
+.venv/
 .env
+
 
 # OS files
 Thumbs.db
