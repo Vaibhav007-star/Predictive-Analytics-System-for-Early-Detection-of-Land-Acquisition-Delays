@@ -132,3 +132,236 @@ export interface AuditLogListResponse {
   items: AuditLogItem[];
 }
 
+
+
+// ----------------- Phase 6: Simulation & Statutory Types -----------------
+
+export interface SimulationRequest {
+  package_split_count: number;
+  contingency_budget_pct: number;
+  dedicated_slao_taskforce: boolean;
+  parallel_statutory_hearings: boolean;
+  row_pre_possession_pct: number;
+  execution_buffer_months: number;
+}
+
+export interface CustomProjectSimulationRequest {
+  sector: string;
+  state: string;
+  agency: string;
+  orig_cost_cr: number;
+  planned_duration_months: number;
+  approval_year: number;
+  simulation_levers: SimulationRequest;
+}
+
+export interface LeverContributionItem {
+  lever: string;
+  relative_impact_points: number;
+  description: string;
+}
+
+export interface SimulationResponse {
+  project_code: string;
+  project_name: string;
+  baseline: {
+    risk_score: number;
+    risk_category: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    probability: number;
+    badge_color: string;
+    estimated_delay_months: number;
+  };
+  simulated: {
+    risk_score: number;
+    risk_category: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    probability: number;
+    badge_color: string;
+    estimated_delay_months: number;
+  };
+  metrics: {
+    risk_score_delta: number;
+    percentage_reduction: number;
+    months_overrun_avoided: number;
+    capital_escalation_saved_cr: number;
+  };
+  lever_breakdown: LeverContributionItem[];
+}
+
+export interface StatutoryDirectiveItem {
+  statutory_ref: string;
+  title: string;
+  directive: string;
+  urgency: string;
+}
+
+export interface StatutoryAssessmentResponse {
+  project_code: string;
+  project_name: string;
+  state: string;
+  sector: string;
+  current_statutory_stage: string;
+  stage_description: string;
+  lapsing_risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  lapsing_risk_score: number;
+  section_25_deadline_flag: boolean;
+  urgency_clause_eligible: boolean;
+  statutory_directives: StatutoryDirectiveItem[];
+  multiplier_framework: string;
+  evaluation_timestamp: string;
+}
+
+export interface NoticeDraftResponse {
+  formatted_document: string;
+  memo_number?: string;
+  date?: string;
+}
+
+// ----------------- Phase 7: Survival Analysis Types -----------------
+
+export interface HazardPointItem {
+  month: number;
+  survival_probability: number;
+  delay_probability: number;
+  cumulative_hazard: number;
+  monthly_hazard_rate: number;
+}
+
+export interface PeakDangerWindowItem {
+  window: string;
+  peak_month: number;
+  statutory_milestone: string;
+  description: string;
+}
+
+export interface ProjectedDatesItem {
+  original_target: string;
+  expected_completion: string;
+  confidence_range_80: string;
+}
+
+export interface SurvivalForecastItem {
+  expected_overrun_months: number;
+  confidence_interval_80_months: [number, number];
+  confidence_interval_95_months: [number, number];
+  projected_dates: ProjectedDatesItem;
+}
+
+export interface SurvivalResponse {
+  weibull_parameters: {
+    shape_k: number;
+    scale_lambda_months: number;
+  };
+  hazard_curve: HazardPointItem[];
+  peak_danger_window: PeakDangerWindowItem;
+  forecasting: SurvivalForecastItem;
+}
+
+// ----------------- Phase 8: Geospatial Corridor Types -----------------
+
+export interface SampleCorridorItem {
+  id: string;
+  name: string;
+  sector: string;
+  state: string;
+  description: string;
+  coordinates: [number, number][];
+}
+
+export interface CorridorSegmentItem {
+  segment_index: number;
+  start: [number, number];
+  end: [number, number];
+  length_km: number;
+}
+
+export interface CorridorEnvironmentalMetrics {
+  forest_overlap_pct: number;
+  forest_stretch_km: number;
+  river_crossings_count: number;
+  settlement_density_pct: number;
+}
+
+export interface CorridorVulnerabilityAssessment {
+  score: number;
+  tier: string;
+  badge_color: string;
+  summary: string;
+}
+
+export interface CorridorRecommendationItem {
+  category: string;
+  directive: string;
+}
+
+export interface CorridorAnalysisResponse {
+  name: string;
+  sector: string;
+  state: string;
+  total_distance_km: number;
+  waypoints_count: number;
+  coordinates: [number, number][];
+  segments: CorridorSegmentItem[];
+  environmental_metrics: CorridorEnvironmentalMetrics;
+  vulnerability_assessment: CorridorVulnerabilityAssessment;
+  corridor_recommendations: CorridorRecommendationItem[];
+}
+
+// ----------------- Phase 9: Infrastructure Contagion Types -----------------
+
+export interface GraphNodeItem {
+  id: string;
+  label: string;
+  type: 'PROJECT' | 'AGENCY' | 'STATE';
+  color: string;
+  size: number;
+  details: string;
+  sector?: string;
+  state?: string;
+  agency?: string;
+  risk_score?: number;
+  orig_cost_cr?: number;
+}
+
+export interface GraphLinkItem {
+  source: string;
+  target: string;
+  relationship: string;
+  weight: number;
+}
+
+export interface GraphNetworkResponse {
+  total_nodes: number;
+  total_links: number;
+  nodes: GraphNodeItem[];
+  links: GraphLinkItem[];
+}
+
+export interface CascadedProjectItem {
+  project_code: string;
+  project_name: string;
+  agency: string;
+  sector: string;
+  secondary_delay_months: number;
+  contagion_pathway: string;
+  estimated_cost_escalation_cr: number;
+}
+
+export interface CascadeSummaryItem {
+  exposed_projects_count: number;
+  total_secondary_delay_months: number;
+  total_cascade_escalation_cr: number;
+  ripple_severity: string;
+}
+
+export interface CascadeResponse {
+  epicenter: {
+    project_code: string;
+    project_name: string;
+    agency: string;
+    state: string;
+    orig_cost_cr: number;
+    delay_shock_months: number;
+  };
+  cascade_summary: CascadeSummaryItem;
+  cascaded_projects: CascadedProjectItem[];
+}

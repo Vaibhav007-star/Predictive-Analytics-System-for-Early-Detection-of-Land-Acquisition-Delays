@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Query, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from src.api.schemas import (
     ProjectListResponse,
@@ -23,7 +23,19 @@ from src.api.schemas import (
     InterventionCreate,
     InterventionResponse,
     AuditLogItem,
-    AuditLogListResponse
+    AuditLogListResponse,
+    SimulationRequest,
+    CustomProjectSimulationRequest,
+    SimulationResponse,
+    StatutoryAssessmentResponse,
+    NoticeDraftRequest,
+    NoticeDraftResponse,
+    SurvivalResponse,
+    CorridorAnalysisRequest,
+    CorridorAnalysisResponse,
+    GraphNetworkResponse,
+    CascadeRequest,
+    CascadeResponse
 )
 from src.api.auth import (
     authenticate_user,
@@ -33,6 +45,7 @@ from src.api.auth import (
     User
 )
 from src.api.service import get_service
+from src.regulatory.rfctlarr import RFCTLARRStatutoryEngine
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
@@ -237,6 +250,116 @@ def get_audit_trail(
         "total": len(items),
         "items": items
     }
+
+
+# ----------------- Phase 6: Simulation & Statutory Routes -----------------
+
+@app.post("/projects/{project_code}/simulate")
+@app.post("/api/projects/{project_code}/simulate")
+def simulate_project_route(project_code: str, body: SimulationRequest):
+    service = get_service()
+    res = service.simulate_project(
+        project_code=project_code,
+        package_split_count=body.package_split_count,
+        contingency_budget_pct=body.contingency_budget_pct,
+        dedicated_slao_taskforce=body.dedicated_slao_taskforce,
+        parallel_statutory_hearings=body.parallel_statutory_hearings,
+        row_pre_possession_pct=body.row_pre_possession_pct,
+        execution_buffer_months=body.execution_buffer_months
+    )
+    if res is None:
+        raise HTTPException(status_code=404, detail=f"Project '{project_code}' not found.")
+    p = service.project_lookup.get(project_code, {})
+    res["project_code"] = project_code
+    res["project_name"] = str(p.get("project_name", project_code))
+    return res
+
+@app.post("/simulation/custom")
+@app.post("/api/simulation/custom")
+def simulate_custom_project_route(body: CustomProjectSimulationRequest):
+    service = get_service()
+    return service.simulate_custom_project(
+        sector=body.sector,
+        state=body.state,
+        agency=body.agency,
+        orig_cost_cr=body.orig_cost_cr,
+        planned_duration_months=body.planned_duration_months,
+        approval_year=body.approval_year,
+        levers=body.simulation_levers.model_dump()
+    )
+
+@app.get("/projects/{project_code}/statutory")
+@app.get("/api/projects/{project_code}/statutory")
+def get_project_statutory_route(project_code: str):
+    service = get_service()
+    res = service.get_statutory_assessment(project_code)
+    if res is None:
+        raise HTTPException(status_code=404, detail=f"Project '{project_code}' not found.")
+    return res
+
+@app.post("/projects/{project_code}/statutory/notice")
+@app.post("/api/projects/{project_code}/statutory/notice")
+def draft_statutory_notice_route(project_code: str, body: Dict[str, Any]):
+    service = get_service()
+    p = service.project_lookup.get(project_code)
+    if p is None:
+        raise HTTPException(status_code=404, detail=f"Project '{project_code}' not found.")
+    
+    recipient_title = body.get("recipient_title") or body.get("issuing_authority") or "District Collector & District Magistrate"
+    custom_notes = body.get("custom_instructions") or body.get("custom_notes") or body.get("notes") or ""
+    
+    return RFCTLARRStatutoryEngine.generate_executive_memorandum(
+        project_data=dict(p),
+        recipient_title=recipient_title,
+        custom_notes=custom_notes
+    )
+
+# ----------------- Phase 7: Survival Analysis Routes -----------------
+
+@app.get("/projects/{project_code}/survival", response_model=SurvivalResponse)
+@app.get("/api/projects/{project_code}/survival", response_model=SurvivalResponse)
+def get_project_survival_route(project_code: str):
+    service = get_service()
+    res = service.get_project_survival(project_code)
+    if res is None:
+        raise HTTPException(status_code=404, detail=f"Project '{project_code}' not found.")
+    return res
+
+# ----------------- Phase 8: Geospatial Corridor Routes -----------------
+
+@app.get("/geo/corridors/sample")
+@app.get("/api/geo/corridors/sample")
+def get_sample_corridors_route():
+    service = get_service()
+    return service.get_sample_corridors()
+
+@app.post("/geo/corridors/analyze", response_model=CorridorAnalysisResponse)
+@app.post("/api/geo/corridors/analyze", response_model=CorridorAnalysisResponse)
+def analyze_corridor_route(body: CorridorAnalysisRequest):
+    service = get_service()
+    return service.analyze_corridor(
+        coordinates=body.coordinates,
+        sector=body.sector,
+        state=body.state,
+        name=body.name
+    )
+
+# ----------------- Phase 9: Infrastructure Contagion Routes -----------------
+
+@app.get("/graph/network", response_model=GraphNetworkResponse)
+@app.get("/api/graph/network", response_model=GraphNetworkResponse)
+def get_graph_network_route():
+    service = get_service()
+    return service.get_contagion_network()
+
+@app.post("/graph/cascade", response_model=CascadeResponse)
+@app.post("/api/graph/cascade", response_model=CascadeResponse)
+def simulate_cascade_route(body: CascadeRequest):
+    service = get_service()
+    return service.simulate_cascade(
+        epicenter_project_code=body.epicenter_project_code,
+        delay_shock_months=body.delay_shock_months
+    )
 
 
 # Mount built React frontend if available

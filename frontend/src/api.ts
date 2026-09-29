@@ -7,7 +7,17 @@ import type {
   User,
   AuthResponse,
   Intervention,
-  AuditLogListResponse
+  AuditLogListResponse,
+  SimulationRequest,
+  CustomProjectSimulationRequest,
+  SimulationResponse,
+  StatutoryAssessmentResponse,
+  NoticeDraftResponse,
+  SurvivalResponse,
+  SampleCorridorItem,
+  CorridorAnalysisResponse,
+  GraphNetworkResponse,
+  CascadeResponse
 } from './types';
 
 const API_BASE = '';
@@ -157,3 +167,139 @@ export async function fetchAuditLogs(limit: number = 50): Promise<AuditLogListRe
   return res.json();
 }
 
+
+
+// ----------------- Phase 6: Simulation & Statutory Callers -----------------
+
+export async function simulateProject(
+  projectCode: string,
+  levers: SimulationRequest
+): Promise<SimulationResponse> {
+  const res = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(projectCode)}/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(levers)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Simulation failed' }));
+    throw new Error(err.detail || `Simulation failed (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function simulateCustomProject(
+  request: CustomProjectSimulationRequest
+): Promise<SimulationResponse> {
+  const res = await fetch(`${API_BASE}/api/simulation/custom`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Custom simulation failed' }));
+    throw new Error(err.detail || `Custom simulation failed (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchStatutoryAssessment(
+  projectCode: string
+): Promise<StatutoryAssessmentResponse> {
+  const res = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(projectCode)}/statutory`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to load statutory assessment' }));
+    throw new Error(err.detail || `Statutory query failed (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function generateStatutoryNotice(
+  projectCode: string,
+  recipientTitle: string,
+  customInstructions: string
+): Promise<NoticeDraftResponse> {
+  const res = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(projectCode)}/statutory/notice`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      recipient_title: recipientTitle,
+      custom_instructions: customInstructions
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to draft notice' }));
+    throw new Error(err.detail || `Notice generation failed (${res.status})`);
+  }
+  return res.json();
+}
+
+// ----------------- Phase 7: Survival Analysis Caller -----------------
+
+export async function fetchProjectSurvival(
+  projectCode: string
+): Promise<SurvivalResponse> {
+  const res = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(projectCode)}/survival`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to load survival curve' }));
+    throw new Error(err.detail || `Survival query failed (${res.status})`);
+  }
+  return res.json();
+}
+
+// ----------------- Phase 8: Geospatial Corridor Callers -----------------
+
+export async function fetchSampleCorridors(): Promise<SampleCorridorItem[]> {
+  const res = await fetch(`${API_BASE}/api/geo/corridors/sample`);
+  if (!res.ok) throw new Error(`Failed to load corridors (${res.status})`);
+  return res.json();
+}
+
+export async function analyzeCorridorRoute(
+  coordinates: [number, number][],
+  sector: string,
+  state: string,
+  name: string
+): Promise<CorridorAnalysisResponse> {
+  const res = await fetch(`${API_BASE}/api/geo/corridors/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      coordinates,
+      sector,
+      state,
+      name
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Corridor analysis failed' }));
+    throw new Error(err.detail || `Corridor analysis failed (${res.status})`);
+  }
+  return res.json();
+}
+
+// ----------------- Phase 9: Infrastructure Contagion Callers -----------------
+
+export async function fetchContagionNetwork(): Promise<GraphNetworkResponse> {
+  const res = await fetch(`${API_BASE}/api/graph/network`);
+  if (!res.ok) throw new Error(`Failed to fetch network graph (${res.status})`);
+  return res.json();
+}
+
+export async function simulateContagionCascade(
+  epicenterProjectCode: string,
+  delayShockMonths: number = 18
+): Promise<CascadeResponse> {
+  const res = await fetch(`${API_BASE}/api/graph/cascade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      epicenter_project_code: epicenterProjectCode,
+      delay_shock_months: delayShockMonths
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Cascade simulation failed' }));
+    throw new Error(err.detail || `Cascade simulation failed (${res.status})`);
+  }
+  return res.json();
+}

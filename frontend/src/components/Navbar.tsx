@@ -1,10 +1,12 @@
 import React from 'react';
-import { LayoutDashboard, Database, MapPin, Shield, UserCheck, History } from 'lucide-react';
+import { LayoutDashboard, Database, MapPin, Sliders, Compass, Share2, Shield, UserCheck, History } from 'lucide-react';
 import type { User } from '../types';
 
+export type NavigationTab = 'dashboard' | 'projects' | 'map' | 'sandbox' | 'corridors' | 'contagion';
+
 interface NavbarProps {
-  activeTab: 'dashboard' | 'projects' | 'map';
-  setActiveTab: (tab: 'dashboard' | 'projects' | 'map') => void;
+  activeTab: NavigationTab;
+  setActiveTab: (tab: NavigationTab) => void;
   user: User | null;
   onSwitchRole: (targetRole: 'Admin' | 'Viewer') => void;
   onOpenAuditLogs: () => void;
@@ -42,41 +44,77 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center: Tab Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === 'dashboard'
                   ? 'bg-amber-500 text-slate-950 font-semibold shadow'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Dashboard</span>
             </button>
 
             <button
               onClick={() => setActiveTab('projects')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === 'projects'
                   ? 'bg-amber-500 text-slate-950 font-semibold shadow'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <Database className="w-4 h-4" />
+              <Database className="w-3.5 h-3.5" />
               <span>Projects</span>
             </button>
 
             <button
               onClick={() => setActiveTab('map')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === 'map'
                   ? 'bg-amber-500 text-slate-950 font-semibold shadow'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-3.5 h-3.5" />
               <span>GIS Map</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('sandbox')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'sandbox'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Policy Sandbox</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('corridors')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'corridors'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Corridor Studio</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('contagion')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'contagion'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Contagion Network</span>
             </button>
           </nav>
 
@@ -131,39 +169,72 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Sub-Navigation Bar */}
-        <div className="flex md:hidden items-center justify-around py-2 border-t border-slate-800/80">
+        <div className="flex lg:hidden items-center justify-around py-2 border-t border-slate-800/80 overflow-x-auto gap-1">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer ${
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
               activeTab === 'dashboard'
                 ? 'bg-amber-500 text-slate-950 font-semibold'
                 : 'text-slate-300'
             }`}
           >
-            <LayoutDashboard className="w-3.5 h-3.5" />
+            <LayoutDashboard className="w-3 h-3" />
             <span>Dashboard</span>
           </button>
           <button
             onClick={() => setActiveTab('projects')}
-            className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer ${
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
               activeTab === 'projects'
                 ? 'bg-amber-500 text-slate-950 font-semibold'
                 : 'text-slate-300'
             }`}
           >
-            <Database className="w-3.5 h-3.5" />
+            <Database className="w-3 h-3" />
             <span>Projects</span>
           </button>
           <button
             onClick={() => setActiveTab('map')}
-            className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer ${
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
               activeTab === 'map'
                 ? 'bg-amber-500 text-slate-950 font-semibold'
                 : 'text-slate-300'
             }`}
           >
-            <MapPin className="w-3.5 h-3.5" />
+            <MapPin className="w-3 h-3" />
             <span>GIS Map</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('sandbox')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
+              activeTab === 'sandbox'
+                ? 'bg-amber-500 text-slate-950 font-semibold'
+                : 'text-slate-300'
+            }`}
+          >
+            <Sliders className="w-3 h-3" />
+            <span>Sandbox</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('corridors')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
+              activeTab === 'corridors'
+                ? 'bg-amber-500 text-slate-950 font-semibold'
+                : 'text-slate-300'
+            }`}
+          >
+            <Compass className="w-3 h-3" />
+            <span>Corridors</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('contagion')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
+              activeTab === 'contagion'
+                ? 'bg-amber-500 text-slate-950 font-semibold'
+                : 'text-slate-300'
+            }`}
+          >
+            <Share2 className="w-3 h-3" />
+            <span>Contagion</span>
           </button>
         </div>
       </div>

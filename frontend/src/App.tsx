@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
+import { Navbar, type NavigationTab } from './components/Navbar';
 import { KPICards } from './components/KPICards';
 import { RiskDistributionChart } from './components/RiskDistributionChart';
 import { PriorityQueueTable } from './components/PriorityQueueTable';
 import { ProjectsTable } from './components/ProjectsTable';
 import { GISMap } from './components/GISMap';
+import { PolicySandboxView } from './components/PolicySandboxView';
+import { CorridorAnalyzerView } from './components/CorridorAnalyzerView';
+import { ContagionGraphView } from './components/ContagionGraphView';
 import { ProjectDetailModal } from './components/ProjectDetailModal';
 import { AuditLogModal } from './components/AuditLogModal';
 import type { RisksSummaryResponse, User } from './types';
@@ -12,7 +15,7 @@ import { fetchRisksSummary, getStoredUser, loginUser, getAuthToken } from './api
 import { RefreshCw, ShieldCheck } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'map'>('dashboard');
+  const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [summary, setSummary] = useState<RisksSummaryResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +134,27 @@ export function App() {
             {activeTab === 'map' && (
               <div>
                 <GISMap onSelectProject={(code) => setSelectedProjectCode(code)} />
+              </div>
+            )}
+
+            {/* View 4: Policy Sandbox & Digital Twin */}
+            {activeTab === 'sandbox' && (
+              <div>
+                <PolicySandboxView />
+              </div>
+            )}
+
+            {/* View 5: Geospatial Corridor Alignment Studio */}
+            {activeTab === 'corridors' && (
+              <div>
+                <CorridorAnalyzerView />
+              </div>
+            )}
+
+            {/* View 6: Contagion Dependency Network & Cascade Simulator */}
+            {activeTab === 'contagion' && (
+              <div>
+                <ContagionGraphView />
               </div>
             )}
           </>

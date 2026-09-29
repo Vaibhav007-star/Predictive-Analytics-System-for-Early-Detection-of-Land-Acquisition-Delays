@@ -73,17 +73,27 @@ class FeaturePipeline:
         feat['is_mega_project'] = (orig_cost >= 1000.0).astype(float) # Rs. 1,000 Cr+ threshold
 
         # 2. Planned Duration (at approval time)
-        durations = [
-            parse_dates_to_months(app, orig)
-            for app, orig in zip(df['approval_date'], df['orig_commissioning_date'])
-        ]
+        if 'approval_date' in df.columns and 'orig_commissioning_date' in df.columns and df['approval_date'].notna().any():
+            durations = [
+                parse_dates_to_months(app, orig)
+                for app, orig in zip(df['approval_date'], df['orig_commissioning_date'])
+            ]
+        elif 'planned_duration_months' in df.columns:
+            durations = df['planned_duration_months'].fillna(36.0).tolist()
+        else:
+            durations = [36.0] * len(df)
+
         feat['planned_duration_months'] = durations
         feat['log_planned_duration'] = np.log1p(durations)
 
         # 3. Approval Chronology (Policy Regime & Macro Environment)
-        app_dt = pd.to_datetime(df['approval_date'], errors='coerce')
-        feat['approval_year'] = app_dt.dt.year.fillna(2018).astype(float)
-        feat['approval_month'] = app_dt.dt.month.fillna(6).astype(float)
+        if 'approval_date' in df.columns and df['approval_date'].notna().any():
+            app_dt = pd.to_datetime(df['approval_date'], errors='coerce')
+            feat['approval_year'] = app_dt.dt.year.fillna(2018).astype(float)
+            feat['approval_month'] = app_dt.dt.month.fillna(6).astype(float)
+        else:
+            feat['approval_year'] = df.get('approval_year', pd.Series([2024]*len(df), index=df.index)).fillna(2024).astype(float)
+            feat['approval_month'] = df.get('approval_month', pd.Series([6]*len(df), index=df.index)).fillna(6).astype(float)
         # Post-RFCTLARR 2013 indicator (Land Acquisition Act enacted in 2013 took effect Jan 1, 2014)
         feat['post_larr_act_2013'] = (feat['approval_year'] >= 2014).astype(float)
 

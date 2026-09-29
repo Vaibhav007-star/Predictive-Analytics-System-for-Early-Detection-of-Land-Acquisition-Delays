@@ -17,6 +17,12 @@ from src.modeling.explainability import ProjectExplainabilityEngine
 from src.modeling.risk_engine import RiskEngine, BAND_DEFINITIONS
 from src.api.geo_data import get_state_coords
 
+from src.regulatory.rfctlarr import RFCTLARRStatutoryEngine
+from src.modeling.simulation import MitigationSimulationEngine
+from src.modeling.survival import SurvivalHazardEngine
+from src.geospatial.corridor import CorridorIntelligenceEngine
+from src.modeling.contagion import InfrastructureContagionEngine
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(BASE_DIR, "data", "land_delays.db")
 MODEL_PATH = os.path.join(BASE_DIR, "models", "gradient_boosting.joblib")
@@ -63,6 +69,10 @@ class ProjectService:
 
         self.xai_engine = ProjectExplainabilityEngine(self.model, self.pipeline.feature_names)
         self.risk_engine = RiskEngine()
+        self.simulation_engine = MitigationSimulationEngine(self.model, self.pipeline, self.risk_engine)
+        self.survival_engine = SurvivalHazardEngine()
+        self.corridor_engine = CorridorIntelligenceEngine()
+        self.contagion_engine = InfrastructureContagionEngine()
 
         # Precompute inferences for all 1,477 projects
         self._precompute_all_risks()
@@ -508,6 +518,149 @@ class ProjectService:
             rows = cursor.fetchall()
 
         return [dict(r) for r in rows]
+
+    # ----------------- Phase 6: Simulation & Statutory Methods -----------------
+
+    def simulate_project(
+        self,
+        project_code: str,
+        package_split_count: int = 1,
+        contingency_budget_pct: float = 0.0,
+        dedicated_slao_taskforce: bool = False,
+        parallel_statutory_hearings: bool = False,
+        row_pre_possession_pct: float = 50.0,
+        execution_buffer_months: int = 0
+    ) -> Optional[Dict[str, Any]]:
+        """Simulates policy mitigations on an existing project."""
+        p = self.project_lookup.get(project_code)
+        if p is None:
+            return None
+        return self.simulation_engine.simulate(
+            project_dict=dict(p),
+            package_split_count=package_split_count,
+            contingency_budget_pct=contingency_budget_pct,
+            dedicated_slao_taskforce=dedicated_slao_taskforce,
+            parallel_statutory_hearings=parallel_statutory_hearings,
+            row_pre_possession_pct=row_pre_possession_pct,
+            execution_buffer_months=execution_buffer_months
+        )
+
+    def simulate_custom_project(
+        self,
+        sector: str,
+        state: str,
+        agency: str,
+        orig_cost_cr: float,
+        planned_duration_months: float,
+        approval_year: int = 2024,
+        levers: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Simulates mitigations on a hypothetical pre-sanction project proposal."""
+        levers = levers or {}
+        custom_proj = {
+            'project_code': 'PROPOSED_NEW',
+            'project_name': f"Proposed {sector.title()} Project ({state})",
+            'sector': sector,
+            'state': state,
+            'agency': agency,
+            'orig_cost_cr': orig_cost_cr,
+            'planned_duration_months': planned_duration_months,
+            'approval_year': approval_year,
+            'approval_month': 4,
+            'approval_date': f"{approval_year}-04-01",
+            'orig_commissioning_date': f"{approval_year + max(1, int(planned_duration_months/12))}-04-01",
+            'delay_months': 0,
+            'is_delayed': 0
+        }
+        return self.simulation_engine.simulate(
+            project_dict=custom_proj,
+            package_split_count=levers.get('package_split_count', 1),
+            contingency_budget_pct=levers.get('contingency_budget_pct', 0.0),
+            dedicated_slao_taskforce=levers.get('dedicated_slao_taskforce', False),
+            parallel_statutory_hearings=levers.get('parallel_statutory_hearings', False),
+            row_pre_possession_pct=levers.get('row_pre_possession_pct', 50.0),
+            execution_buffer_months=levers.get('execution_buffer_months', 0)
+        )
+
+    def get_statutory_assessment(self, project_code: str) -> Optional[Dict[str, Any]]:
+        """Evaluates RFCTLARR 2013 statutory compliance & Section 25 lapsing risk."""
+        p = self.project_lookup.get(project_code)
+        if p is None:
+            return None
+        return RFCTLARRStatutoryEngine.evaluate_project_compliance(dict(p))
+
+    def draft_statutory_notice(
+        self,
+        project_code: str,
+        form_type: str,
+        district: str,
+        tehsil_or_taluk: str,
+        notified_area_hectares: float,
+        issuing_authority: str
+    ) -> Optional[Dict[str, Any]]:
+        """Generates Gazette-formatted legal acquisition notice."""
+        p = self.project_lookup.get(project_code)
+        if p is None:
+            return None
+        return RFCTLARRStatutoryEngine.draft_statutory_notice(
+            project_data=dict(p),
+            form_type=form_type,
+            district=district,
+            tehsil_or_taluk=tehsil_or_taluk,
+            notified_area_hectares=notified_area_hectares,
+            issuing_authority=issuing_authority
+        )
+
+    # ----------------- Phase 7: Survival Analysis Methods -----------------
+
+    def get_project_survival(self, project_code: str) -> Optional[Dict[str, Any]]:
+        """Calculates dynamic Weibull survival curve and hazard metrics."""
+        p = self.project_lookup.get(project_code)
+        if p is None:
+            return None
+        return self.survival_engine.calculate_survival_curve(
+            project_dict=dict(p),
+            risk_score=int(p.get('risk_score', 50) or 50)
+        )
+
+    # ----------------- Phase 8: Geospatial Corridor Methods -----------------
+
+    def get_sample_corridors(self) -> List[Dict[str, Any]]:
+        """Returns sample linear corridors."""
+        return self.corridor_engine.get_sample_corridors()
+
+    def analyze_corridor(
+        self,
+        coordinates: List[List[float]],
+        sector: str = "ROAD TRANSPORT AND HIGHWAYS",
+        state: str = "MAHARASHTRA",
+        name: str = "Custom Infrastructure Corridor"
+    ) -> Dict[str, Any]:
+        """Analyzes alignment, distance, and environmental friction."""
+        return self.corridor_engine.analyze_corridor(
+            coordinates=coordinates,
+            sector=sector,
+            state=state,
+            name=name
+        )
+
+    # ----------------- Phase 9: Infrastructure Contagion Methods -----------------
+
+    def get_contagion_network(self) -> Dict[str, Any]:
+        """Constructs multi-relational knowledge graph."""
+        return self.contagion_engine.generate_network(self.df, top_n=30)
+
+    def simulate_cascade(
+        self,
+        epicenter_project_code: str,
+        delay_shock_months: int = 18
+    ) -> Dict[str, Any]:
+        """Simulates propagation of a delay shock through network topology."""
+        return self.contagion_engine.simulate_cascade(
+            epicenter_code=epicenter_project_code,
+            delay_shock_months=delay_shock_months,
+            projects_df=self.df
+        )
 
 # Global singleton
 
