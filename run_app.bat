@@ -15,5 +15,5 @@ echo [2/2] Starting FastAPI backend server on port 8000 ...
 echo Press Ctrl+C anytime to stop the server.
 echo.
 
-.\.venv\Scripts\python.exe -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+.\.venv\Scripts\python.exe -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000 --reload
 pause
