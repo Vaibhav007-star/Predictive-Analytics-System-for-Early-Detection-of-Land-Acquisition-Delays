@@ -8,12 +8,13 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/2] Launching web browser to http://localhost:8000/app ...
-start "" "http://localhost:8000/app"
+echo [1/2] Scheduling browser launch once backend initializes (3s)...
+start "" /b powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Start-Process 'http://localhost:8000/app'"
 
-echo [2/2] Starting FastAPI backend server on port 8000 ...
-echo Press Ctrl+C anytime to stop the server.
+echo [2/2] Starting FastAPI backend server on http://localhost:8000 ...
+echo System will automatically open in your default browser in 3 seconds.
+echo Press Ctrl+C anytime in this window to stop the server.
 echo.
 
-.\.venv\Scripts\python.exe -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000 --reload
+.\.venv\Scripts\python.exe -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000
 pause
