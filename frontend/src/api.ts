@@ -20,7 +20,8 @@ import type {
   CascadeResponse
 } from './types';
 
-const API_BASE = '';
+// Use VITE_API_BASE if set (e.g. for production Vercel deployment pointing to backend API), otherwise relative URL
+const API_BASE = (import.meta.env.VITE_API_BASE as string) || '';
 
 const TOKEN_KEY = 'sih26017_token';
 const USER_KEY = 'sih26017_user';

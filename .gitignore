@@ -10,6 +10,8 @@ data/raw/*.pdf
 
 # Node & Frontend
 frontend/node_modules/
+frontend/dist/
+.vercel/
 
 # Environments
 venv/
@@ -21,3 +23,6 @@ venv/
 Thumbs.db
 .DS_Store
 
+
+.vercel
+.env*

@@ -7,8 +7,11 @@
 [![Vite](https://img.shields.io/badge/Vite-8.3-purple.svg)](https://vitejs.dev)
 [![TailwindCSS v4](https://img.shields.io/badge/TailwindCSS-v4-38bdf8.svg)](https://tailwindcss.com)
 [![Tests Passing](https://img.shields.io/badge/pytest-30%2F30%20passing-brightgreen.svg)](https://docs.pytest.org)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-success?style=for-the-badge&logo=vercel)](https://predictive-analytics-system-for-ear.vercel.app)
 
 **Ministry of Rural Development (MoRD) — Smart India Hackathon (Problem Statement SIH26017)**
+
+> 🌐 **Live Web Application**: [https://predictive-analytics-system-for-ear.vercel.app](https://predictive-analytics-system-for-ear.vercel.app)
 
 An end-to-end, multi-tier artificial intelligence and geospatial decision support platform engineered to predict, diagnose, simulate, and mitigate land acquisition bottlenecks across India's Central Sector Infrastructure Portfolio. Built with **100% authentic Government of India open records** (MoSPI & PMGSY), transparent SHAP explainability, Weibull survival hazard dynamics, linear corridor environmental buffers, counterfactual digital twin simulation, and multi-relational contagion cascade modeling.
 
