@@ -1,8 +1,8 @@
 import React from 'react';
-import { LayoutDashboard, Database, MapPin, Sliders, Compass, Share2, Shield, UserCheck, History } from 'lucide-react';
+import { LayoutDashboard, Database, MapPin, Box, Sliders, Compass, Share2, Shield, UserCheck, History } from 'lucide-react';
 import type { User } from '../types';
 
-export type NavigationTab = 'dashboard' | 'projects' | 'map' | 'sandbox' | 'corridors' | 'contagion';
+export type NavigationTab = 'dashboard' | 'projects' | 'map' | 'twin3d' | 'sandbox' | 'corridors' | 'contagion';
 
 interface NavbarProps {
   activeTab: NavigationTab;
@@ -79,6 +79,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <MapPin className="w-3.5 h-3.5" />
               <span>GIS Map</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('twin3d')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'twin3d'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>3D Twin</span>
             </button>
 
             <button
@@ -202,6 +214,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <MapPin className="w-3 h-3" />
             <span>GIS Map</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('twin3d')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-medium whitespace-nowrap cursor-pointer ${
+              activeTab === 'twin3d'
+                ? 'bg-amber-500 text-slate-950 font-semibold'
+                : 'text-slate-300'
+            }`}
+          >
+            <Box className="w-3 h-3" />
+            <span>3D Twin</span>
           </button>
           <button
             onClick={() => setActiveTab('sandbox')}

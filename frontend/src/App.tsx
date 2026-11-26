@@ -5,6 +5,7 @@ import { RiskDistributionChart } from './components/RiskDistributionChart';
 import { PriorityQueueTable } from './components/PriorityQueueTable';
 import { ProjectsTable } from './components/ProjectsTable';
 import { GISMap } from './components/GISMap';
+import { DigitalTwin3DView } from './components/DigitalTwin3DView';
 import { PolicySandboxView } from './components/PolicySandboxView';
 import { CorridorAnalyzerView } from './components/CorridorAnalyzerView';
 import { ContagionGraphView } from './components/ContagionGraphView';
@@ -134,6 +135,13 @@ export function App() {
             {activeTab === 'map' && (
               <div>
                 <GISMap onSelectProject={(code) => setSelectedProjectCode(code)} />
+              </div>
+            )}
+
+            {/* View 3B: National 3D Risk & Contagion Twin */}
+            {activeTab === 'twin3d' && (
+              <div>
+                <DigitalTwin3DView onSelectProject={(code) => setSelectedProjectCode(code)} />
               </div>
             )}
 
