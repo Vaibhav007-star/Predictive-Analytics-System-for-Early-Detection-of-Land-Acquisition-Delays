@@ -6,7 +6,13 @@ echo =====================================================================
 echo.
 
 cd /d "%~dp0"
-.\.venv\Scripts\python.exe -m pytest tests/ -v
+if exist ".venv\Scripts\python.exe" (
+    set "PYTHON_EXE=.venv\Scripts\python.exe"
+) else (
+    set "PYTHON_EXE=python"
+)
+
+"%PYTHON_EXE%" -m pytest tests/ -v
 
 echo.
 echo =====================================================================

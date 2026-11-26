@@ -16,5 +16,11 @@ echo System will automatically open in your default browser in 3 seconds.
 echo Press Ctrl+C anytime in this window to stop the server.
 echo.
 
-.\.venv\Scripts\python.exe -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000
+if exist ".venv\Scripts\python.exe" (
+    set "PYTHON_EXE=.venv\Scripts\python.exe"
+) else (
+    set "PYTHON_EXE=python"
+)
+
+"%PYTHON_EXE%" -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000
 pause
